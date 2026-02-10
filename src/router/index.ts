@@ -30,6 +30,40 @@ const router = createRouter({
       component: () => import('@/views/QueuePage.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/cart/:concertId',
+      name: 'cart',
+      component: () => import('@/views/CartPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/seats/:concertId',
+      name: 'seats',
+      component: () => import('@/views/SeatsPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/payment/result',
+      name: 'payment-result',
+      component: () => import('@/views/PaymentResultPage.vue'),
+    },
+    {
+      path: '/payment/:reservationId',
+      name: 'payment',
+      component: () => import('@/views/PaymentPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/my/tickets',
+      name: 'my-tickets',
+      component: () => import('@/views/MyTicketsPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundPage.vue'),
+    },
   ],
 })
 
