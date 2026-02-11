@@ -35,3 +35,11 @@ export interface SeatHoldResponse {
   expiresAt: string // ISO timestamp — 10분 후
   seatId: string
 }
+
+export interface VenueSectionInfo {
+  id: string
+  label: string
+  grade: string // 'vip' | 's' | 'a'
+  totalSeats: number
+  availableSeats: number
+}
