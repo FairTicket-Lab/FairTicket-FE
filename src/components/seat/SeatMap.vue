@@ -4,6 +4,7 @@ import type { Seat, SeatSection } from '@/types/seat'
 defineProps<{
   sections: SeatSection[]
   selectedSeatId: string | null
+  sectionLabel?: string
 }>()
 
 const emit = defineEmits<{
@@ -11,10 +12,10 @@ const emit = defineEmits<{
 }>()
 
 const gradeColors: Record<string, { fill: string; stroke: string }> = {
-  vip: { fill: '#7C3AED', stroke: '#6D28D9' },
+  vip: { fill: '#7B3FA0', stroke: '#6A2E8F' },
   r: { fill: '#2563EB', stroke: '#1D4ED8' },
-  s: { fill: '#059669', stroke: '#047857' },
-  a: { fill: '#D97706', stroke: '#B45309' },
+  s: { fill: '#8B9EC8', stroke: '#7A8DB7' },
+  a: { fill: '#D4884E', stroke: '#C87B41' },
 }
 
 function seatColor(seat: Seat, isSelected: boolean) {
@@ -32,11 +33,20 @@ function seatColor(seat: Seat, isSelected: boolean) {
       class="w-full min-w-[500px] h-auto"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <!-- 스테이지 -->
-      <rect x="200" y="20" width="300" height="40" rx="20" fill="hsl(265,85%,60%)" opacity="0.3" />
-      <text x="350" y="46" text-anchor="middle" fill="white" font-size="14" font-weight="600">STAGE</text>
+      <!-- Stage direction -->
+      <rect x="200" y="10" width="300" height="32" rx="16" fill="hsl(265,85%,60%)" opacity="0.3" />
+      <text x="350" y="32" text-anchor="middle" fill="white" font-size="13" font-weight="600">
+        ↑ STAGE
+      </text>
 
-      <!-- 좌석 -->
+      <!-- Section label -->
+      <text
+        v-if="sectionLabel"
+        x="350" y="62"
+        text-anchor="middle" fill="hsl(265,85%,60%)" font-size="16" font-weight="700"
+      >{{ sectionLabel }}</text>
+
+      <!-- Seats -->
       <template v-for="section in sections" :key="section.id">
         <g v-for="seat in section.seats" :key="seat.id">
           <rect
