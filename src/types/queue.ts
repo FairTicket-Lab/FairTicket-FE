@@ -21,3 +21,21 @@ export interface QueuePollResponse {
   status: QueueStatus
   token?: string
 }
+
+// BE 실제 응답 형식
+export interface QueueEntryApiResponse {
+  scheduleId: number
+  userId: number
+  position: number
+  estimatedWaitMinutes: number
+  message: string
+}
+
+export interface QueueStatusApiResponse {
+  position: number
+  status: string // "WAITING" | "READY"
+  token: string | null
+  estimatedWaitMinutes: number
+  aheadCount: number
+  message: string
+}

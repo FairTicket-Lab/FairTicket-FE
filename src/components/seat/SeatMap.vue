@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Seat, SeatSection } from '@/types/seat'
 
-defineProps<{
+const props = defineProps<{
   sections: SeatSection[]
-  selectedSeatId: string | null
+  selectedSeatIds: string[]
   sectionLabel?: string
 }>()
 
@@ -18,8 +18,12 @@ const gradeColors: Record<string, { fill: string; stroke: string }> = {
   a: { fill: '#D4884E', stroke: '#C87B41' },
 }
 
-function seatColor(seat: Seat, isSelected: boolean) {
-  if (isSelected) return { fill: '#EC4899', stroke: '#DB2777' }
+function isSelected(seatId: string) {
+  return props.selectedSeatIds.includes(seatId)
+}
+
+function seatColor(seat: Seat) {
+  if (isSelected(seat.id)) return { fill: '#EC4899', stroke: '#DB2777' }
   if (seat.status === 'sold') return { fill: '#27272A', stroke: '#3F3F46' }
   if (seat.status === 'held') return { fill: '#52525B', stroke: '#71717A' }
   return gradeColors[seat.gradeId] ?? { fill: '#6B7280', stroke: '#4B5563' }
@@ -55,17 +59,17 @@ function seatColor(seat: Seat, isSelected: boolean) {
             width="22"
             height="22"
             rx="4"
-            :fill="seatColor(seat, selectedSeatId === seat.id).fill"
-            :stroke="seatColor(seat, selectedSeatId === seat.id).stroke"
+            :fill="seatColor(seat).fill"
+            :stroke="seatColor(seat).stroke"
             stroke-width="1.5"
             :class="[
               seat.status === 'available' ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed',
-              selectedSeatId === seat.id ? 'animate-pulse' : '',
+              isSelected(seat.id) ? 'animate-pulse' : '',
             ]"
             @click="seat.status === 'available' && emit('select', seat)"
           />
           <text
-            v-if="selectedSeatId === seat.id"
+            v-if="isSelected(seat.id)"
             :x="seat.x + 11"
             :y="seat.y + 15"
             text-anchor="middle"

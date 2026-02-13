@@ -11,6 +11,17 @@ client.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  const userJson = localStorage.getItem('user')
+  if (userJson) {
+    try {
+      const user = JSON.parse(userJson)
+      if (user.id) {
+        config.headers['X-User-Id'] = String(user.id)
+      }
+    } catch {
+      // ignore malformed JSON
+    }
+  }
   return config
 })
 

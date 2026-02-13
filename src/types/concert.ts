@@ -2,19 +2,17 @@ export type SaleStatus = 'on-sale' | 'coming-soon' | 'sold-out'
 
 export interface TicketGrade {
   id: string
-  label: string // VIP, R, S, A
+  label: string // VIP, S, A
   price: number
-  originalPrice?: number
   totalSeats: number
   availableSeats: number
 }
 
 export interface ConcertDate {
   id: string
-  date: string // ISO 날짜
-  time: string
+  date: string // yyyy-MM-dd
+  time: string // HH:mm
   venue: string
-  city: string
   available: boolean
 }
 
@@ -22,11 +20,8 @@ export interface Concert {
   id: string
   title: string
   artist: string
-  subtitle: string
-  image: string
-  category: string
-  description: string
-  tags: string[]
+  venue: string
+  image: string // FE 정적 매핑
   saleStatus: SaleStatus
   saleDate?: string
   dates: ConcertDate[]
