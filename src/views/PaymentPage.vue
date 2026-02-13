@@ -1,10 +1,33 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { CreditCard, Clock, Loader2, ShieldCheck } from 'lucide-vue-next'
 import { usePaymentStore } from '@/stores/payment.store'
 import { reservationApi } from '@/api/reservation.api'
-import { useCountdown } from '@/composables/useCountdown'
+import { paymentApi } from '@/api/payment.api'
+
+declare global {
+  interface Window {
+    PortOne?: {
+      requestPayment: (params: {
+        storeId: string
+        channelKey: string
+        paymentId: string
+        orderName: string
+        totalAmount: number
+        currency: string
+        payMethod: string
+      }) => Promise<{
+        code?: string
+        message?: string
+        txId?: string
+        paymentId?: string
+      }>
+    }
+  }
+}
+
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,8 +38,39 @@ const loading = ref(true)
 const paying = ref(false)
 const selectedMethod = ref<'card' | 'kakao' | 'toss'>('card')
 
+// prepare 응답 데이터
+const merchantUid = ref('')
+const preparedAmount = ref(0)
+const itemName = ref('')
+
+// 카운트다운 (prepare의 timeoutSeconds 기반)
+const remaining = ref(0)
+let timerInterval: ReturnType<typeof setInterval> | null = null
+
+const display = computed(() => {
+  const m = Math.floor(remaining.value / 60)
+  const s = remaining.value % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+})
+
+function startCountdown(seconds: number) {
+  remaining.value = seconds
+  timerInterval = setInterval(() => {
+    remaining.value--
+    if (remaining.value <= 0) {
+      if (timerInterval) clearInterval(timerInterval)
+      router.push('/payment/result?status=expired')
+    }
+  }, 1000)
+}
+
+onUnmounted(() => {
+  if (timerInterval) clearInterval(timerInterval)
+})
+
 onMounted(async () => {
   try {
+    // 예약 정보 로드
     if (!paymentStore.reservation || paymentStore.reservation.id !== reservationId) {
       const r = await reservationApi.getById(reservationId)
       if (r) paymentStore.setReservation(r)
@@ -25,18 +79,16 @@ onMounted(async () => {
         return
       }
     }
+
+    // 결제 준비 (merchantUid, amount 확보 + 타이머 시작)
+    const prepared = await paymentApi.prepare(reservationId)
+    merchantUid.value = prepared.merchantUid
+    preparedAmount.value = prepared.amount
+    itemName.value = prepared.itemName
+    startCountdown(prepared.timeoutSeconds)
   } finally {
     loading.value = false
   }
-})
-
-const countdown = useCountdown(paymentStore.reservation?.expiresAt ?? null)
-onMounted(() => {
-  if (paymentStore.reservation) countdown.start()
-})
-
-watch(countdown.isExpired, (expired) => {
-  if (expired) router.push('/payment/result?status=expired')
 })
 
 const methods = [
@@ -45,24 +97,79 @@ const methods = [
   { id: 'toss' as const, label: '토스페이', icon: ShieldCheck },
 ]
 
+const PAY_METHOD_MAP: Record<string, string> = {
+  card: 'CARD',
+  kakao: 'EASY_PAY',
+  toss: 'EASY_PAY',
+}
+
 async function handlePay() {
   if (!paymentStore.reservation) return
   paying.value = true
   paymentStore.setStatus('processing')
-  try {
-    // PoC — 목 결제 (1.5초 딜레이)
-    await new Promise((r) => setTimeout(r, 1500))
-    await reservationApi.pay(paymentStore.reservation!.id)
-    paymentStore.setStatus('success')
-    router.push('/payment/result?status=success')
-  } catch {
-    paymentStore.setStatus('fail', '결제에 실패했습니다.')
+
+  if (USE_MOCK) {
+    // mock 결제 — 기존 로직 유지
+    try {
+      await new Promise((r) => setTimeout(r, 1500))
+      await reservationApi.pay(paymentStore.reservation!.id)
+      paymentStore.setStatus('success')
+      router.push('/payment/result?status=success')
+    } catch {
+      paymentStore.setStatus('fail', '결제에 실패했습니다.')
+      router.push('/payment/result?status=fail')
+    }
+    return
+  }
+
+  // 실제 PortOne V2 결제
+  if (!window.PortOne) {
+    paymentStore.setStatus('fail', 'PortOne SDK를 불러올 수 없습니다.')
     router.push('/payment/result?status=fail')
+    paying.value = false
+    return
+  }
+
+  try {
+    const response = await window.PortOne.requestPayment({
+      storeId: import.meta.env.VITE_PORTONE_STORE_ID,
+      channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+      paymentId: merchantUid.value,
+      orderName: itemName.value,
+      totalAmount: preparedAmount.value,
+      currency: 'KRW',
+      payMethod: PAY_METHOD_MAP[selectedMethod.value],
+    })
+
+    if (response.code) {
+      // 사용자 취소 또는 에러
+      paymentStore.setStatus('fail', response.message ?? '결제가 취소되었습니다.')
+      router.push('/payment/result?status=fail')
+    } else {
+      // 결제 성공 → 서버 검증
+      try {
+        await paymentApi.webhook({
+          impUid: response.txId!,
+          merchantUid: merchantUid.value,
+        })
+        paymentStore.setStatus('success')
+        router.push('/payment/result?status=success')
+      } catch {
+        paymentStore.setStatus('fail', '결제 검증에 실패했습니다.')
+        router.push('/payment/result?status=fail')
+      }
+    }
+  } catch {
+    paymentStore.setStatus('fail', '결제 처리 중 오류가 발생했습니다.')
+    router.push('/payment/result?status=fail')
+  } finally {
+    paying.value = false
   }
 }
 </script>
 
 <template>
+  <div>
   <div v-if="loading" class="flex items-center justify-center min-h-[60vh]">
     <Loader2 class="w-8 h-8 animate-spin text-primary" />
   </div>
@@ -74,9 +181,9 @@ async function handlePay() {
       <span class="text-sm text-muted-foreground">결제 제한 시간</span>
       <span
         class="font-display font-bold text-lg"
-        :class="countdown.remaining.value < 60 ? 'text-destructive' : 'text-foreground'"
+        :class="remaining < 60 ? 'text-destructive' : 'text-foreground'"
       >
-        {{ countdown.display.value }}
+        {{ display }}
       </span>
     </div>
 
@@ -137,7 +244,7 @@ async function handlePay() {
             <div>
               <p class="text-xs text-muted-foreground uppercase tracking-wider mb-1">트랙</p>
               <p class="text-sm text-foreground">
-                {{ paymentStore.reservation.track === 'cart' ? '장바구니 예매' : '당일 예매' }}
+                {{ paymentStore.reservation.track === 'lottery' ? '로터리 예매' : '라이브 예매' }}
               </p>
             </div>
             <div>
@@ -146,7 +253,22 @@ async function handlePay() {
                 {{ paymentStore.reservation.gradeLabel }} × {{ paymentStore.reservation.quantity }}매
               </p>
             </div>
-            <div v-if="paymentStore.reservation.seatId">
+            <!-- 복수 좌석 -->
+            <div v-if="paymentStore.reservation.seats?.length">
+              <p class="text-xs text-muted-foreground uppercase tracking-wider mb-1">좌석</p>
+              <div class="space-y-1">
+                <div
+                  v-for="seat in paymentStore.reservation.seats"
+                  :key="seat.seatId"
+                  class="flex items-center justify-between text-sm text-foreground"
+                >
+                  <span>{{ seat.section }}구역 {{ seat.row }}열 {{ seat.number }}번 ({{ seat.gradeLabel }})</span>
+                  <span class="text-muted-foreground">₩{{ seat.unitPrice.toLocaleString() }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- 단일 좌석 (하위 호환) -->
+            <div v-else-if="paymentStore.reservation.seatId">
               <p class="text-xs text-muted-foreground uppercase tracking-wider mb-1">좌석</p>
               <p class="text-sm text-foreground">{{ paymentStore.reservation.seatId }}</p>
             </div>
@@ -176,5 +298,6 @@ async function handlePay() {
         </div>
       </div>
     </div>
+  </div>
   </div>
 </template>

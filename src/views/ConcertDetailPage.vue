@@ -64,6 +64,7 @@ function goToQueue() {
 </script>
 
 <template>
+  <div>
   <!-- 로딩 -->
   <div v-if="loading" class="flex items-center justify-center min-h-[60vh]">
     <Loader2 class="w-8 h-8 animate-spin text-primary" />
@@ -329,4 +330,5 @@ function goToQueue() {
       </div>
     </div>
   </template>
+  </div>
 </template>

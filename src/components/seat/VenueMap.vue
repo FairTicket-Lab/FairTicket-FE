@@ -5,6 +5,7 @@ import type { VenueSectionInfo } from '@/types/seat'
 const props = defineProps<{
   sections: VenueSectionInfo[]
   selectedSectionId: string | null
+  sectionBadges?: Record<string, number>
 }>()
 
 const emit = defineEmits<{
@@ -78,12 +79,36 @@ const ring1 = computed(() => {
     const sa = startAngle + i * (sectionSpan + gap)
     const ea = sa + sectionSpan
     const grade = VIP_1F.has(id) ? 'vip' : 's'
-    return { id, sa, ea, r1, r2, grade, path: arcPath(sa, ea, r1, r2), label: labelXY(sa, ea, r1, r2) }
+    return {
+      id,
+      sa,
+      ea,
+      r1,
+      r2,
+      grade,
+      path: arcPath(sa, ea, r1, r2),
+      label: labelXY(sa, ea, r1, r2),
+    }
   })
 })
 
 /* 2F sections 24–43: outer arc ring — 27~40 are S, rest are A */
-const S_2F = new Set(['27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40'])
+const S_2F = new Set([
+  '27',
+  '28',
+  '29',
+  '30',
+  '31',
+  '32',
+  '33',
+  '34',
+  '35',
+  '36',
+  '37',
+  '38',
+  '39',
+  '40',
+])
 const ring2 = computed(() => {
   const ids = Array.from({ length: 20 }, (_, i) => String(i + 24))
   const startAngle = 80
@@ -97,7 +122,16 @@ const ring2 = computed(() => {
     const sa = startAngle + i * (sectionSpan + gap)
     const ea = sa + sectionSpan
     const grade = S_2F.has(id) ? 's' : 'a'
-    return { id, sa, ea, r1, r2, grade, path: arcPath(sa, ea, r1, r2), label: labelXY(sa, ea, r1, r2) }
+    return {
+      id,
+      sa,
+      ea,
+      r1,
+      r2,
+      grade,
+      path: arcPath(sa, ea, r1, r2),
+      label: labelXY(sa, ea, r1, r2),
+    }
   })
 })
 
@@ -125,9 +159,8 @@ function isSelected(id: string): boolean {
 }
 
 function sectionFill(id: string, grade: string): string {
-  const c = colors[grade] ?? colors.a
-  if (isSelected(id)) return c.hover
-  return c.fill
+  const c = colors[grade] ?? colors.a!
+  return isSelected(id) ? c!.hover : c!.fill
 }
 
 function handleClick(id: string) {
@@ -142,10 +175,24 @@ function handleClick(id: string) {
     <rect width="800" height="800" fill="#16162A" rx="16" />
 
     <!-- Title -->
-    <rect x="300" y="55" width="200" height="36" fill="none" stroke="#FFFFFF" stroke-width="1.5" rx="2" />
+    <rect
+      x="300"
+      y="55"
+      width="200"
+      height="36"
+      fill="none"
+      stroke="#FFFFFF"
+      stroke-width="1.5"
+      rx="2"
+    />
     <text
-      x="400" y="80" text-anchor="middle"
-      fill="#FFFFFF" font-size="16" font-weight="700" font-family="sans-serif"
+      x="400"
+      y="80"
+      text-anchor="middle"
+      fill="#FFFFFF"
+      font-size="16"
+      font-weight="700"
+      font-family="sans-serif"
     >
       좌석배치도
     </text>
@@ -156,8 +203,14 @@ function handleClick(id: string) {
       fill="#3D3560"
     />
     <text
-      x="400" y="217" text-anchor="middle"
-      fill="#FFFFFF" font-size="22" font-weight="700" font-family="sans-serif" letter-spacing="5"
+      x="400"
+      y="217"
+      text-anchor="middle"
+      fill="#FFFFFF"
+      font-size="22"
+      font-weight="700"
+      font-family="sans-serif"
+      letter-spacing="5"
     >
       STAGE
     </text>
@@ -167,35 +220,68 @@ function handleClick(id: string) {
 
     <!-- Floor sections (VIP) -->
     <g
-      v-for="rect in floorRects" :key="'floor-' + rect.id"
+      v-for="rect in floorRects"
+      :key="'floor-' + rect.id"
       :class="isSoldOut(rect.id) ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'"
       @click="handleClick(rect.id)"
     >
       <rect
-        :x="rect.x" :y="rect.y" :width="rect.w" :height="rect.h"
+        :x="rect.x"
+        :y="rect.y"
+        :width="rect.w"
+        :height="rect.h"
         rx="4"
         :fill="sectionFill(rect.id, 'vip')"
-        stroke="#12122A" stroke-width="1"
+        stroke="#12122A"
+        stroke-width="1"
       />
       <text
-        :x="rect.x + rect.w / 2" :y="rect.y + rect.h / 2 + 5"
+        :x="rect.x + rect.w / 2"
+        :y="rect.y + rect.h / 2 + 5"
         text-anchor="middle"
-        fill="#FFFFFF" font-size="16" font-weight="700" font-family="sans-serif"
+        fill="#FFFFFF"
+        font-size="16"
+        font-weight="700"
+        font-family="sans-serif"
         class="pointer-events-none"
-      >{{ rect.id }}</text>
+      >
+        {{ rect.id }}
+      </text>
       <circle
         v-if="isSelected(rect.id)"
-        :cx="rect.x + rect.w / 2" :cy="rect.y + rect.h / 2"
-        r="20" fill="none" stroke="#FFD700" stroke-width="2.5"
+        :cx="rect.x + rect.w / 2"
+        :cy="rect.y + rect.h / 2"
+        r="20"
+        fill="none"
+        stroke="#FFD700"
+        stroke-width="2.5"
         class="pointer-events-none"
       />
+      <!-- 선택 수 뱃지 -->
+      <g v-if="sectionBadges?.[rect.id]" class="pointer-events-none">
+        <circle :cx="rect.x + rect.w - 4" :cy="rect.y + 4" r="9" fill="#EC4899" />
+        <text
+          :x="rect.x + rect.w - 4"
+          :y="rect.y + 8"
+          text-anchor="middle"
+          fill="#FFFFFF"
+          font-size="10"
+          font-weight="700"
+          font-family="sans-serif"
+        >{{ sectionBadges[rect.id] }}</text>
+      </g>
     </g>
 
     <!-- F.O.H -->
     <rect x="335" y="495" width="130" height="22" rx="3" fill="#222240" />
     <text
-      x="400" y="511" text-anchor="middle"
-      fill="#8888AA" font-size="10" font-weight="500" font-family="sans-serif"
+      x="400"
+      y="511"
+      text-anchor="middle"
+      fill="#8888AA"
+      font-size="10"
+      font-weight="500"
+      font-family="sans-serif"
     >
       F.O.H
     </text>
@@ -206,64 +292,118 @@ function handleClick(id: string) {
 
     <!-- 1F ring (inner) -->
     <g
-      v-for="sec in ring1" :key="'1f-' + sec.id"
+      v-for="sec in ring1"
+      :key="'1f-' + sec.id"
       :class="isSoldOut(sec.id) ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'"
       @click="handleClick(sec.id)"
     >
       <path
         :d="sec.path"
         :fill="sectionFill(sec.id, sec.grade)"
-        stroke="#12122A" stroke-width="1.2"
+        stroke="#12122A"
+        stroke-width="1.2"
       />
       <text
-        :x="sec.label.x" :y="sec.label.y + 4"
+        :x="sec.label.x"
+        :y="sec.label.y + 4"
         text-anchor="middle"
-        fill="#FFFFFF" :font-size="sec.id.length > 1 ? 10 : 12" font-weight="600" font-family="sans-serif"
+        fill="#FFFFFF"
+        :font-size="sec.id.length > 1 ? 10 : 12"
+        font-weight="600"
+        font-family="sans-serif"
         class="pointer-events-none"
-      >{{ sec.id }}</text>
+      >
+        {{ sec.id }}
+      </text>
       <circle
         v-if="isSelected(sec.id)"
-        :cx="sec.label.x" :cy="sec.label.y"
-        r="14" fill="none" stroke="#FFD700" stroke-width="2.5"
+        :cx="sec.label.x"
+        :cy="sec.label.y"
+        r="14"
+        fill="none"
+        stroke="#FFD700"
+        stroke-width="2.5"
         class="pointer-events-none"
       />
+      <g v-if="sectionBadges?.[sec.id]" class="pointer-events-none">
+        <circle :cx="sec.label.x + 12" :cy="sec.label.y - 12" r="8" fill="#EC4899" />
+        <text
+          :x="sec.label.x + 12"
+          :y="sec.label.y - 8"
+          text-anchor="middle"
+          fill="#FFFFFF"
+          font-size="9"
+          font-weight="700"
+          font-family="sans-serif"
+        >{{ sectionBadges[sec.id] }}</text>
+      </g>
     </g>
 
     <!-- 2F ring (outer) -->
     <g
-      v-for="sec in ring2" :key="'2f-' + sec.id"
+      v-for="sec in ring2"
+      :key="'2f-' + sec.id"
       :class="isSoldOut(sec.id) ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'"
       @click="handleClick(sec.id)"
     >
       <path
         :d="sec.path"
         :fill="sectionFill(sec.id, sec.grade)"
-        stroke="#12122A" stroke-width="1.2"
+        stroke="#12122A"
+        stroke-width="1.2"
       />
       <text
-        :x="sec.label.x" :y="sec.label.y + 4"
+        :x="sec.label.x"
+        :y="sec.label.y + 4"
         text-anchor="middle"
-        fill="#FFFFFF" :font-size="sec.id.length > 1 ? 10 : 12" font-weight="600" font-family="sans-serif"
+        fill="#FFFFFF"
+        :font-size="sec.id.length > 1 ? 10 : 12"
+        font-weight="600"
+        font-family="sans-serif"
         class="pointer-events-none"
-      >{{ sec.id }}</text>
+      >
+        {{ sec.id }}
+      </text>
       <circle
         v-if="isSelected(sec.id)"
-        :cx="sec.label.x" :cy="sec.label.y"
-        r="14" fill="none" stroke="#FFD700" stroke-width="2.5"
+        :cx="sec.label.x"
+        :cy="sec.label.y"
+        r="14"
+        fill="none"
+        stroke="#FFD700"
+        stroke-width="2.5"
         class="pointer-events-none"
       />
+      <g v-if="sectionBadges?.[sec.id]" class="pointer-events-none">
+        <circle :cx="sec.label.x + 12" :cy="sec.label.y - 12" r="8" fill="#EC4899" />
+        <text
+          :x="sec.label.x + 12"
+          :y="sec.label.y - 8"
+          text-anchor="middle"
+          fill="#FFFFFF"
+          font-size="9"
+          font-weight="700"
+          font-family="sans-serif"
+        >{{ sectionBadges[sec.id] }}</text>
+      </g>
     </g>
 
     <!-- Legend (centered, S at x=400) -->
     <g transform="translate(310, 770)">
       <circle cx="0" cy="0" r="7" fill="#7B3FA0" />
-      <text x="13" y="5" fill="#7B3FA0" font-size="13" font-weight="700" font-family="sans-serif">VIP</text>
+      <text x="13" y="5" fill="#7B3FA0" font-size="13" font-weight="700" font-family="sans-serif">
+        VIP
+      </text>
 
       <circle cx="90" cy="0" r="7" fill="#8B9EC8" />
-      <text x="103" y="5" fill="#8B9EC8" font-size="13" font-weight="700" font-family="sans-serif">S</text>
+      <text x="103" y="5" fill="#8B9EC8" font-size="13" font-weight="700" font-family="sans-serif">
+        S
+      </text>
 
       <circle cx="170" cy="0" r="7" fill="#D4884E" />
-      <text x="183" y="5" fill="#D4884E" font-size="13" font-weight="700" font-family="sans-serif">A</text>
+      <text x="183" y="5" fill="#D4884E" font-size="13" font-weight="700" font-family="sans-serif">
+        A
+      </text>
     </g>
   </svg>
 </template>

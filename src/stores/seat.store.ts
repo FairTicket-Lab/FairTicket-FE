@@ -1,14 +1,25 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { Seat } from '@/types/seat'
 
+const MAX_SEATS = 4
+
 export const useSeatStore = defineStore('seat', () => {
-  const selectedSeat = ref<Seat | null>(null)
+  const selectedSeats = ref<Seat[]>([])
   const holdId = ref<string | null>(null)
   const holdExpiresAt = ref<string | null>(null)
 
-  function selectSeat(seat: Seat) {
-    selectedSeat.value = seat
+  const selectedSeatIds = computed(() => selectedSeats.value.map((s) => s.id))
+  const isFull = computed(() => selectedSeats.value.length >= MAX_SEATS)
+  const remaining = computed(() => MAX_SEATS - selectedSeats.value.length)
+
+  function toggleSeat(seat: Seat) {
+    const idx = selectedSeats.value.findIndex((s) => s.id === seat.id)
+    if (idx >= 0) {
+      selectedSeats.value.splice(idx, 1)
+    } else if (!isFull.value) {
+      selectedSeats.value.push(seat)
+    }
   }
 
   function setHold(id: string, expiresAt: string) {
@@ -17,10 +28,21 @@ export const useSeatStore = defineStore('seat', () => {
   }
 
   function reset() {
-    selectedSeat.value = null
+    selectedSeats.value = []
     holdId.value = null
     holdExpiresAt.value = null
   }
 
-  return { selectedSeat, holdId, holdExpiresAt, selectSeat, setHold, reset }
+  return {
+    selectedSeats,
+    selectedSeatIds,
+    isFull,
+    remaining,
+    holdId,
+    holdExpiresAt,
+    toggleSeat,
+    setHold,
+    reset,
+    MAX_SEATS,
+  }
 })

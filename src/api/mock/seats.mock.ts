@@ -20,21 +20,41 @@ const FLOOR_SECTIONS: SectionConfig[] = [
   { id: 'H', grade: 'vip', rows: 5, seatsPerRow: 10, soldRatio: 0.45 },
 ]
 
-const SECTIONS_1F: SectionConfig[] = Array.from({ length: 15 }, (_, i) => ({
-  id: String(i + 1),
-  grade: 's',
-  rows: 5,
-  seatsPerRow: 10,
-  soldRatio: 0.3,
-}))
+/**
+ * 1F 섹션: init.sql zones 기준
+ * - 섹션 3~13: VIP (11개)
+ * - 섹션 1, 2, 14, 15: S (4개)
+ */
+const VIP_1F = new Set(['3','4','5','6','7','8','9','10','11','12','13'])
 
-const SECTIONS_2F: SectionConfig[] = Array.from({ length: 20 }, (_, i) => ({
-  id: String(i + 24),
-  grade: 'a',
-  rows: 6,
-  seatsPerRow: 12,
-  soldRatio: 0.15,
-}))
+const SECTIONS_1F: SectionConfig[] = Array.from({ length: 15 }, (_, i) => {
+  const id = String(i + 1)
+  return {
+    id,
+    grade: VIP_1F.has(id) ? 'vip' : 's',
+    rows: 5,
+    seatsPerRow: 10,
+    soldRatio: VIP_1F.has(id) ? 0.4 : 0.3,
+  }
+})
+
+/**
+ * 2F 섹션: init.sql zones 기준
+ * - 섹션 27~40: S (14개)
+ * - 섹션 24, 25, 26, 41, 42, 43: A (6개)
+ */
+const S_2F = new Set(['27','28','29','30','31','32','33','34','35','36','37','38','39','40'])
+
+const SECTIONS_2F: SectionConfig[] = Array.from({ length: 20 }, (_, i) => {
+  const id = String(i + 24)
+  return {
+    id,
+    grade: S_2F.has(id) ? 's' : 'a',
+    rows: 6,
+    seatsPerRow: 12,
+    soldRatio: S_2F.has(id) ? 0.2 : 0.15,
+  }
+})
 
 const ALL_SECTIONS: SectionConfig[] = [...FLOOR_SECTIONS, ...SECTIONS_1F, ...SECTIONS_2F]
 
@@ -56,10 +76,7 @@ function buildSectionSeats(config: SectionConfig): SeatSection {
   for (let ri = 0; ri < config.rows; ri++) {
     const rowLabel = rowLabels[ri] ?? String(ri)
     for (let si = 1; si <= config.seatsPerRow; si++) {
-      const rand = Math.random()
-      let status: Seat['status'] = 'available'
-      if (rand < config.soldRatio) status = 'sold'
-      else if (rand < config.soldRatio + 0.05) status = 'held'
+      const status: Seat['status'] = 'available'
 
       seats.push({
         id: `${config.id}-${rowLabel}${si}`,

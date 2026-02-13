@@ -46,7 +46,7 @@ const navLinks = [
       <div class="flex items-center gap-3">
         <template v-if="authStore.isLoggedIn">
           <span class="hidden md:inline text-sm text-muted-foreground">
-            {{ authStore.user?.name }}
+            {{ authStore.user?.name || authStore.user?.email }}
           </span>
           <button
             class="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
@@ -107,6 +107,9 @@ const navLinks = [
           </RouterLink>
           <div class="border-t border-border mt-2 pt-2">
             <template v-if="authStore.isLoggedIn">
+              <div class="px-3 py-2 text-sm text-foreground font-medium">
+                {{ authStore.user?.name ?? authStore.user?.email }}
+              </div>
               <button
                 class="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-md transition-colors"
                 @click="authStore.logout(); mobileOpen = false"

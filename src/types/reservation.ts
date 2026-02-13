@@ -1,5 +1,15 @@
 export type ReservationStatus = 'pending' | 'paid' | 'cancelled' | 'expired'
-export type TrackType = 'cart' | 'realtime'
+export type TrackType = 'lottery' | 'live'
+
+export interface ReservationSeatItem {
+  seatId: string
+  section: string
+  row: string
+  number: number
+  gradeId: string
+  gradeLabel: string
+  unitPrice: number
+}
 
 export interface Reservation {
   id: string
@@ -9,8 +19,9 @@ export interface Reservation {
   track: TrackType
   gradeId: string
   gradeLabel: string
-  seatId?: string // 당일 트랙만
-  quantity: number // 장바구니 트랙은 1~2
+  seatId?: string // 라이브 트랙 단일 좌석 (하위 호환)
+  seats?: ReservationSeatItem[] // 라이브 트랙 복수 좌석
+  quantity: number // 로터리 트랙은 1~2, 라이브는 1~4
   unitPrice: number
   totalPrice: number
   status: ReservationStatus

@@ -21,3 +21,11 @@ export interface AuthResponse {
   accessToken: string
   user: User
 }
+
+// BE 실제 응답 형식
+export interface AuthApiResponse {
+  userId: number
+  email: string
+  name: string
+  token: string
+}

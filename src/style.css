@@ -34,3 +34,132 @@
     margin: 0;
   }
 }
+
+/* ─── Page transitions ────────────────────────────────── */
+.page-enter-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.page-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* ─── Skeleton shimmer ────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--secondary)) 25%,
+    hsl(var(--muted)) 50%,
+    hsl(var(--secondary)) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Flip number animation ───────────────────────────── */
+.flip-out {
+  transform: rotateX(90deg) scale(0.9);
+  opacity: 0.3;
+}
+.flip-in {
+  transform: rotateX(0deg) scale(1);
+  opacity: 1;
+}
+
+/* ─── Ticket tear edge ────────────────────────────────── */
+.ticket-tear-edge {
+  background-image: radial-gradient(
+    circle at 0 50%,
+    transparent 5px,
+    hsl(var(--card)) 5.5px
+  );
+  background-size: 100% 14px;
+  background-repeat: repeat-y;
+}
+
+.ticket-tear-left {
+  background-image: radial-gradient(
+    circle at 0 50%,
+    hsl(var(--background)) 5px,
+    transparent 5.5px
+  );
+  background-size: 100% 14px;
+  background-repeat: repeat-y;
+}
+
+.ticket-tear-right {
+  background-image: radial-gradient(
+    circle at 100% 50%,
+    hsl(var(--background)) 5px,
+    transparent 5.5px
+  );
+  background-size: 100% 14px;
+  background-repeat: repeat-y;
+}
+
+/* ─── Parallax hero ───────────────────────────────────── */
+.parallax-hero {
+  will-change: transform;
+  transition: transform 0.1s linear;
+}
+
+/* ─── Glow pulse for selected items ───────────────────── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px 2px hsl(var(--primary) / 0.3); }
+  50% { box-shadow: 0 0 20px 6px hsl(var(--primary) / 0.5); }
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ─── Gauge bar smooth ────────────────────────────────── */
+.gauge-fill {
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Timeline connector ─────────────────────────────── */
+.timeline-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -1px;
+  width: 2px;
+  height: 100%;
+  background: hsl(var(--border));
+}
+
+/* ─── Zoom container ──────────────────────────────────── */
+.zoom-container {
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+.zoom-container:active {
+  cursor: grabbing;
+}
+.zoom-container svg {
+  transition: transform 0.1s ease-out;
+  transform-origin: 0 0;
+}
+
+/* ─── Scrollbar hide ──────────────────────────────────── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

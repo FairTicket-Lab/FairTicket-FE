@@ -42,12 +42,7 @@ const statusBadge = computed(() => {
           class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div class="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-        <div class="absolute top-3 left-3 flex items-center gap-2">
-          <span
-            class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-background/80 backdrop-blur-sm text-foreground"
-          >
-            {{ concert.category }}
-          </span>
+        <div class="absolute top-3 left-3">
           <span
             :class="statusBadge.class"
             class="px-2.5 py-0.5 text-xs font-semibold rounded-full border"
@@ -74,7 +69,7 @@ const statusBadge = computed(() => {
             </div>
             <div v-if="nextDate" class="flex items-center gap-1.5 text-muted-foreground">
               <MapPin class="w-3.5 h-3.5" />
-              <span class="text-xs">{{ nextDate.city }}</span>
+              <span class="text-xs">{{ nextDate.venue }}</span>
             </div>
           </div>
           <div class="text-right">

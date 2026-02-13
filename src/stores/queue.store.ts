@@ -9,9 +9,11 @@ export const useQueueStore = defineStore('queue', () => {
   const position = ref(0)
   const estimatedWait = ref(0)
   const readyToken = ref<string | null>(null)
+  const scheduleId = ref<string | null>(null)
 
-  async function join(concertId: string) {
-    const res = await queueApi.join(concertId)
+  async function join(id: string) {
+    scheduleId.value = id
+    const res = await queueApi.join(id)
     entry.value = res
     status.value = res.status
     position.value = res.position
@@ -19,8 +21,8 @@ export const useQueueStore = defineStore('queue', () => {
   }
 
   async function poll() {
-    if (!entry.value) return
-    const res = await queueApi.poll(entry.value.queueId)
+    if (!scheduleId.value) return
+    const res = await queueApi.poll(scheduleId.value)
     status.value = res.status
     position.value = res.position
     estimatedWait.value = res.estimatedWaitSeconds
@@ -30,13 +32,13 @@ export const useQueueStore = defineStore('queue', () => {
   }
 
   async function heartbeat() {
-    if (!entry.value) return
-    await queueApi.heartbeat(entry.value.queueId)
+    if (!scheduleId.value) return
+    await queueApi.heartbeat(scheduleId.value)
   }
 
   async function cancel() {
-    if (!entry.value) return
-    await queueApi.cancel(entry.value.queueId)
+    if (!scheduleId.value) return
+    await queueApi.cancel(scheduleId.value)
     reset()
   }
 
@@ -46,7 +48,8 @@ export const useQueueStore = defineStore('queue', () => {
     position.value = 0
     estimatedWait.value = 0
     readyToken.value = null
+    scheduleId.value = null
   }
 
-  return { entry, status, position, estimatedWait, readyToken, join, poll, heartbeat, cancel, reset }
+  return { entry, status, position, estimatedWait, readyToken, scheduleId, join, poll, heartbeat, cancel, reset }
 })

@@ -31,9 +31,9 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/cart/:concertId',
-      name: 'cart',
-      component: () => import('@/views/CartPage.vue'),
+      path: '/lottery/:concertId',
+      name: 'lottery',
+      component: () => import('@/views/LotteryPage.vue'),
       meta: { requiresAuth: true },
     },
     {
