@@ -92,7 +92,7 @@ onMounted(async () => {
   try {
     concert.value = (await concertApi.getById(concertId)) ?? null
     const dateId = concert.value?.dates.find((d) => d.available)?.id ?? ''
-    venueSections.value = await seatApi.getVenueSections(concertId, dateId)
+    venueSections.value = await seatApi.getVenueSections(concert.value?.venue ?? '', String(dateId))
     countdown.start()
   } finally {
     loading.value = false
@@ -131,7 +131,7 @@ async function handleSectionSelect(sectionId: string, _grade: string) {
   handleZoomReset()
   try {
     const dateId = selectedDate.value?.id ?? ''
-    seatSections.value = await seatApi.getSectionSeats(concertId, dateId, sectionId)
+    seatSections.value = await seatApi.getSectionSeats(concert.value?.venue ?? '', String(dateId), sectionId)
     step.value = 'seats'
   } finally {
     loadingSeats.value = false

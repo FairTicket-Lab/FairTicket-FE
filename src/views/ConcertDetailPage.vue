@@ -46,12 +46,12 @@ const formattedSelectedDate = computed(() => {
   })
 })
 
-function goToCart() {
+function goToLottery() {
   if (!authStore.isLoggedIn) {
     router.push({ name: 'login', query: { redirect: route.fullPath } })
     return
   }
-  router.push(`/cart/${concert.value!.id}`)
+  router.push(`/lottery/${concert.value!.id}`)
 }
 
 function goToQueue() {
@@ -263,11 +263,11 @@ function goToQueue() {
                 원하는 예매 트랙을 선택하세요
               </p>
 
-              <!-- 장바구니 트랙 -->
+              <!-- 로터리 트랙 -->
               <button
                 :disabled="concert.saleStatus !== 'on-sale'"
                 class="w-full text-left p-4 rounded-xl border border-border bg-background hover:border-primary/40 hover:bg-primary/5 transition-all mb-3 group disabled:opacity-50 disabled:cursor-not-allowed"
-                @click="goToCart"
+                @click="goToLottery"
               >
                 <div class="flex items-start gap-3">
                   <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -275,7 +275,7 @@ function goToQueue() {
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between">
-                      <h4 class="font-display font-bold text-foreground text-sm">장바구니 예매</h4>
+                      <h4 class="font-display font-bold text-foreground text-sm">로터리 예매</h4>
                       <ArrowRight class="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
@@ -285,7 +285,7 @@ function goToQueue() {
                 </div>
               </button>
 
-              <!-- 당일 트랙 -->
+              <!-- 라이브 트랙 -->
               <button
                 :disabled="concert.saleStatus !== 'on-sale'"
                 class="w-full text-left p-4 rounded-xl border border-border bg-background hover:border-primary/40 hover:bg-primary/5 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
@@ -297,7 +297,7 @@ function goToQueue() {
                   </div>
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between">
-                      <h4 class="font-display font-bold text-foreground text-sm">당일 예매</h4>
+                      <h4 class="font-display font-bold text-foreground text-sm">라이브 예매</h4>
                       <ArrowRight class="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <p class="text-xs text-muted-foreground mt-1 leading-relaxed">

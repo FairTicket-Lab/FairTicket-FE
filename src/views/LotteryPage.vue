@@ -17,6 +17,7 @@ const concertId = route.params.concertId as string
 const concert = ref<Concert | null>(null)
 const loading = ref(true)
 const submitting = ref(false)
+const errorMessage = ref('')
 
 // 등급별 수량 (gradeId → quantity)
 const gradeQuantities = reactive<Record<string, number>>({})
@@ -73,6 +74,7 @@ function decrement(gradeId: string) {
 async function handleSubmit() {
   if (!concert.value || !selectedDate.value || selectedItems.value.length === 0) return
   submitting.value = true
+  errorMessage.value = ''
   try {
     const gradeLabel = selectedItems.value
       .map((item) => `${item.label} x${item.qty}`)
@@ -92,6 +94,11 @@ async function handleSubmit() {
     reservation.totalPrice = totalPrice.value
     paymentStore.setReservation(reservation)
     router.push(`/payment/${reservation.id}`)
+  } catch (e: unknown) {
+    const msg =
+      (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+      ?? '로터리 신청 중 오류가 발생했습니다.'
+    errorMessage.value = msg
   } finally {
     submitting.value = false
   }
@@ -273,6 +280,9 @@ async function handleSubmit() {
               </template>
             </button>
 
+            <p v-if="errorMessage" class="text-sm text-destructive text-center mt-3">
+              {{ errorMessage }}
+            </p>
             <p class="text-xs text-muted-foreground text-center mt-3">
               로터리 당첨 시 좌석이 랜덤 배정됩니다.
             </p>
