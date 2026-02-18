@@ -155,34 +155,66 @@ function removeSeat(seat: Seat) {
 async function handleSubmit() {
   if (!concert.value || seatStore.selectedSeats.length === 0 || !selectedDate.value) return
   submitting.value = true
+  const scheduleId = String(selectedDate.value.id)
+
   try {
+    const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
+
+    if (USE_MOCK) {
+      const seats: ReservationSeatItem[] = seatStore.selectedSeats.map((s) => {
+        const grade = gradeOf(s)
+        return { seatId: s.id, section: s.section, row: s.row, number: s.number, gradeId: s.gradeId, gradeLabel: grade?.label ?? s.gradeId, unitPrice: grade?.price ?? 0 }
+      })
+      const firstGrade = gradeOf(seatStore.selectedSeats[0])
+      const reservation = await reservationApi.create({
+        concertId: concert.value.id, concertTitle: concert.value.title, dateId: selectedDate.value.id,
+        track: 'live', gradeId: firstGrade?.id ?? '', gradeLabel: seats.map((s) => s.gradeLabel).join(', '),
+        unitPrice: firstGrade?.price ?? 0, quantity: seats.length, seats,
+      })
+      paymentStore.setReservation(reservation)
+      queueStore.reset()
+      router.push(`/payment/${reservation.id}`)
+      return
+    }
+
+    // BE 연동: 좌석마다 seatApi.selectSeat 호출
+    let lastResponse: import('@/api/seat.api').SeatSelectionResponse | null = null
+    for (const seat of seatStore.selectedSeats) {
+      const grade = (seat.gradeId ?? '').toUpperCase()
+      const zone = seat.section
+      const seatNumber = String(seat.number)
+      lastResponse = await seatApi.selectSeat(scheduleId, grade, zone, seatNumber)
+    }
+
+    // pending 예약 조회
+    const { data: pendingRes } = await (await import('@/api/client')).default.get(
+      `/v1/reservations/pending`, { params: { scheduleId } },
+    )
+    const reservationId = String(pendingRes.id)
+    const firstGrade = gradeOf(seatStore.selectedSeats[0])
     const seats: ReservationSeatItem[] = seatStore.selectedSeats.map((s) => {
       const grade = gradeOf(s)
-      return {
-        seatId: s.id,
-        section: s.section,
-        row: s.row,
-        number: s.number,
-        gradeId: s.gradeId,
-        gradeLabel: grade?.label ?? s.gradeId,
-        unitPrice: grade?.price ?? 0,
-      }
+      return { seatId: s.id, section: s.section, row: s.row, number: s.number, gradeId: s.gradeId, gradeLabel: grade?.label ?? s.gradeId, unitPrice: grade?.price ?? 0 }
     })
-    const firstGrade = gradeOf(seatStore.selectedSeats[0])
-    const reservation = await reservationApi.create({
+
+    paymentStore.setReservation({
+      id: reservationId,
       concertId: concert.value.id,
       concertTitle: concert.value.title,
-      dateId: selectedDate.value.id,
+      dateId: scheduleId,
       track: 'live',
       gradeId: firstGrade?.id ?? '',
       gradeLabel: seats.map((s) => s.gradeLabel).join(', '),
+      quantity: seatStore.selectedSeats.length,
       unitPrice: firstGrade?.price ?? 0,
-      quantity: seats.length,
+      totalPrice: totalPrice.value,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      expiresAt: lastResponse?.paymentDeadline ?? new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       seats,
     })
-    paymentStore.setReservation(reservation)
     queueStore.reset()
-    router.push(`/payment/${reservation.id}`)
+    router.push(`/payment/${reservationId}`)
   } finally {
     submitting.value = false
   }

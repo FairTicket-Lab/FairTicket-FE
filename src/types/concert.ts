@@ -8,12 +8,15 @@ export interface TicketGrade {
   availableSeats: number
 }
 
+export type ActiveTrack = 'lottery' | 'live' | 'none'
+
 export interface ConcertDate {
   id: string
   date: string // yyyy-MM-dd
   time: string // HH:mm
   venue: string
   available: boolean
+  activeTrack?: ActiveTrack // 현재 열린 트랙 (없으면 둘 다 열림)
 }
 
 export interface Concert {

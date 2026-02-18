@@ -113,7 +113,7 @@ async function handleSubmit() {
 
   <div v-else-if="!concert" class="flex flex-col items-center justify-center min-h-[60vh]">
     <h2 class="font-display text-2xl font-bold text-foreground mb-2">공연을 찾을 수 없습니다</h2>
-    <RouterLink to="/" class="text-primary hover:underline">홈으로 돌아가기</RouterLink>
+    <RouterLink to="/concerts" class="text-primary hover:underline">홈으로 돌아가기</RouterLink>
   </div>
 
   <div v-else class="px-4 lg:px-8 mx-auto max-w-7xl py-8 md:py-12">

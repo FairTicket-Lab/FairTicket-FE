@@ -91,7 +91,7 @@ const isExpired = computed(() => status.value === 'expired')
             <ArrowRight class="w-4 h-4" />
           </RouterLink>
           <RouterLink
-            to="/"
+            to="/concerts"
             class="inline-flex items-center justify-center h-11 px-6 rounded-full border border-border text-foreground font-semibold text-sm hover:bg-secondary transition-colors"
           >
             홈으로
@@ -107,7 +107,7 @@ const isExpired = computed(() => status.value === 'expired')
         <h1 class="font-display text-2xl font-bold text-foreground mb-2">결제 시간 만료</h1>
         <p class="text-muted-foreground mb-8">결제 제한 시간이 초과되었습니다.<br />다시 예매해주세요.</p>
         <RouterLink
-          to="/"
+          to="/concerts"
           class="inline-flex items-center justify-center h-11 px-6 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors gap-2"
         >
           홈으로 돌아가기
@@ -125,7 +125,7 @@ const isExpired = computed(() => status.value === 'expired')
           {{ paymentStore.failReason || '결제 처리 중 오류가 발생했습니다.' }}
         </p>
         <RouterLink
-          to="/"
+          to="/concerts"
           class="inline-flex items-center justify-center h-11 px-6 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors gap-2"
         >
           홈으로 돌아가기

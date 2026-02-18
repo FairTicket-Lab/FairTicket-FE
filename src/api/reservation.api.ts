@@ -143,26 +143,43 @@ export const reservationApi = {
     }
   },
 
-  /** 내 예약 목록 (결제 기록 기반) */
+  /** 내 예약 목록 (결제 + 예약 조합) */
   async getMyTickets(): Promise<Reservation[]> {
     if (USE_MOCK) return [...mockTickets].reverse()
-    const { data } = await client.get('/v1/payment/my')
-    if (!Array.isArray(data)) return []
-    return data.map((p: any) => ({
-      id: String(p.reservationId),
-      concertId: '',
-      concertTitle: '',
-      dateId: '',
-      track: 'lottery' as TrackType,
-      gradeId: '',
-      gradeLabel: '',
-      quantity: 1,
-      unitPrice: p.amount ?? 0,
-      totalPrice: p.amount ?? 0,
-      status: p.status === 'COMPLETED' ? 'paid' : 'pending',
-      createdAt: p.createdAt ?? new Date().toISOString(),
-      expiresAt: p.expiresAt ?? new Date().toISOString(),
-    }))
+    const [{ data: payments }, { data: reservations }] = await Promise.all([
+      client.get('/v1/payment/my'),
+      client.get('/v1/reservations/my'),
+    ])
+    // reservationId → trackType 매핑
+    const trackMap = new Map<string, string>()
+    const gradeMap = new Map<string, string>()
+    const qtyMap = new Map<string, number>()
+    if (Array.isArray(reservations)) {
+      for (const r of reservations) {
+        trackMap.set(String(r.id), (r.trackType ?? 'LOTTERY').toLowerCase())
+        gradeMap.set(String(r.id), r.grade ?? '')
+        qtyMap.set(String(r.id), r.quantity ?? 1)
+      }
+    }
+    if (!Array.isArray(payments)) return []
+    return payments.map((p: any) => {
+      const resId = String(p.reservationId)
+      return {
+        id: resId,
+        concertId: '',
+        concertTitle: '',
+        dateId: '',
+        track: (trackMap.get(resId) ?? 'lottery') as TrackType,
+        gradeId: '',
+        gradeLabel: gradeMap.get(resId) ?? '',
+        quantity: qtyMap.get(resId) ?? 1,
+        unitPrice: p.amount ?? 0,
+        totalPrice: p.amount ?? 0,
+        status: (p.status === 'COMPLETED' ? 'paid' : 'pending') as Reservation['status'],
+        createdAt: p.createdAt ?? new Date().toISOString(),
+        expiresAt: p.expiresAt ?? new Date().toISOString(),
+      }
+    })
   },
 
   /** 내 로터리 예약 결과 목록 (스케줄별) */

@@ -11,6 +11,7 @@ import {
   Users,
   Loader2,
   ArrowRight,
+  Lock,
 } from 'lucide-vue-next'
 import type { Concert, ConcertDate } from '@/types/concert'
 import { concertApi } from '@/api/concert.api'
@@ -54,6 +55,10 @@ function goToLottery() {
   router.push(`/lottery/${concert.value!.id}`)
 }
 
+const activeTrack = computed(() => selectedDate.value?.activeTrack ?? undefined)
+const isLotteryLocked = computed(() => activeTrack.value === 'live')
+const isLiveLocked = computed(() => activeTrack.value === 'lottery')
+
 function goToQueue() {
   if (!authStore.isLoggedIn) {
     router.push({ name: 'login', query: { redirect: route.fullPath } })
@@ -73,7 +78,7 @@ function goToQueue() {
   <!-- 404 -->
   <div v-else-if="!concert" class="flex flex-col items-center justify-center min-h-[60vh]">
     <h2 class="font-display text-2xl font-bold text-foreground mb-2">공연을 찾을 수 없습니다</h2>
-    <RouterLink to="/" class="text-primary hover:underline">홈으로 돌아가기</RouterLink>
+    <RouterLink to="/concerts" class="text-primary hover:underline">홈으로 돌아가기</RouterLink>
   </div>
 
   <!-- 콘서트 상세 -->
@@ -265,6 +270,7 @@ function goToQueue() {
 
               <!-- 로터리 트랙 -->
               <button
+                v-if="!isLotteryLocked"
                 :disabled="concert.saleStatus !== 'on-sale'"
                 class="w-full text-left p-4 rounded-xl border border-border bg-background hover:border-primary/40 hover:bg-primary/5 transition-all mb-3 group disabled:opacity-50 disabled:cursor-not-allowed"
                 @click="goToLottery"
@@ -284,9 +290,27 @@ function goToQueue() {
                   </div>
                 </div>
               </button>
+              <!-- 로터리 트랙 (잠금) -->
+              <div
+                v-else
+                class="w-full text-left p-4 rounded-xl border border-border bg-muted/30 mb-3 opacity-60 cursor-not-allowed"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Lock class="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-display font-bold text-muted-foreground text-sm">로터리 예매</h4>
+                    <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      🔒 로터리 트랙 예매 시간대 마감
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               <!-- 라이브 트랙 -->
               <button
+                v-if="!isLiveLocked"
                 :disabled="concert.saleStatus !== 'on-sale'"
                 class="w-full text-left p-4 rounded-xl border border-border bg-background hover:border-primary/40 hover:bg-primary/5 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                 @click="goToQueue"
@@ -306,6 +330,23 @@ function goToQueue() {
                   </div>
                 </div>
               </button>
+              <!-- 라이브 트랙 (잠금) -->
+              <div
+                v-else
+                class="w-full text-left p-4 rounded-xl border border-border bg-muted/30 opacity-60 cursor-not-allowed"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <Lock class="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h4 class="font-display font-bold text-muted-foreground text-sm">라이브 예매</h4>
+                    <p class="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      🔒 정각에 오픈
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               <!-- 예매 불가 상태 -->
               <div

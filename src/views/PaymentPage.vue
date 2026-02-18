@@ -75,7 +75,7 @@ onMounted(async () => {
       const r = await reservationApi.getById(reservationId)
       if (r) paymentStore.setReservation(r)
       else {
-        router.push('/')
+        router.push('/concerts')
         return
       }
     }
@@ -103,13 +103,18 @@ const PAY_METHOD_MAP: Record<string, string> = {
   toss: 'EASY_PAY',
 }
 
+const CHANNEL_KEY_MAP: Record<string, string> = {
+  card: import.meta.env.VITE_PORTONE_CHANNEL_KEY_CARD,
+  kakao: import.meta.env.VITE_PORTONE_CHANNEL_KEY_KAKAO,
+  toss: import.meta.env.VITE_PORTONE_CHANNEL_KEY_TOSS,
+}
+
 async function handlePay() {
   if (!paymentStore.reservation) return
   paying.value = true
   paymentStore.setStatus('processing')
 
   if (USE_MOCK) {
-    // mock 결제 — 기존 로직 유지
     try {
       await new Promise((r) => setTimeout(r, 1500))
       await reservationApi.pay(paymentStore.reservation!.id)
@@ -122,7 +127,7 @@ async function handlePay() {
     return
   }
 
-  // 실제 PortOne V2 결제
+  // PortOne V2 결제
   if (!window.PortOne) {
     paymentStore.setStatus('fail', 'PortOne SDK를 불러올 수 없습니다.')
     router.push('/payment/result?status=fail')
@@ -133,7 +138,7 @@ async function handlePay() {
   try {
     const response = await window.PortOne.requestPayment({
       storeId: import.meta.env.VITE_PORTONE_STORE_ID,
-      channelKey: import.meta.env.VITE_PORTONE_CHANNEL_KEY,
+      channelKey: CHANNEL_KEY_MAP[selectedMethod.value],
       paymentId: merchantUid.value,
       orderName: itemName.value,
       totalAmount: preparedAmount.value,
@@ -142,11 +147,9 @@ async function handlePay() {
     })
 
     if (response.code) {
-      // 사용자 취소 또는 에러
       paymentStore.setStatus('fail', response.message ?? '결제가 취소되었습니다.')
       router.push('/payment/result?status=fail')
     } else {
-      // 결제 성공 → 서버 검증
       try {
         await paymentApi.webhook({
           impUid: response.txId!,

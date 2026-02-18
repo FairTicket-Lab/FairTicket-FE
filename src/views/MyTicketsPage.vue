@@ -70,7 +70,7 @@ function formatDate(iso: string) {
       <p class="text-lg font-medium text-foreground mb-2">예매 내역이 없습니다</p>
       <p class="text-sm text-muted-foreground mb-6">공연을 둘러보고 티켓을 예매해보세요!</p>
       <RouterLink
-        to="/"
+        to="/concerts"
         class="inline-flex items-center justify-center h-10 px-5 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
       >
         공연 둘러보기

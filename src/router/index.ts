@@ -6,6 +6,12 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'intro',
+      component: () => import('@/views/IntroPage.vue'),
+      meta: { fullscreen: true },
+    },
+    {
+      path: '/concerts',
       name: 'home',
       component: () => import('@/views/HomePage.vue'),
     },

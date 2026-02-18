@@ -7,7 +7,7 @@ const authStore = useAuthStore()
 const mobileOpen = ref(false)
 
 const navLinks = [
-  { label: 'Concerts', to: '/' },
+  { label: 'Concerts', to: '/concerts' },
   { label: 'My Tickets', to: '/my/tickets' },
 ]
 </script>
@@ -19,7 +19,7 @@ const navLinks = [
     <div class="mx-auto max-w-7xl flex items-center justify-between px-4 h-16 lg:px-8">
       <!-- 좌측: 로고 + 네비 -->
       <div class="flex items-center gap-8">
-        <RouterLink to="/" class="flex items-center gap-1.5">
+        <RouterLink to="/concerts" class="flex items-center gap-1.5">
           <img
             src="/images/FairTicket logo.png"
             alt="FairTicket"

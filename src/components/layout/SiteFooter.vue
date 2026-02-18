@@ -21,7 +21,7 @@
           <h4 class="text-sm font-semibold text-foreground mb-3">Events</h4>
           <ul class="space-y-2">
             <li>
-              <RouterLink to="/" class="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <RouterLink to="/concerts" class="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Concerts
               </RouterLink>
             </li>

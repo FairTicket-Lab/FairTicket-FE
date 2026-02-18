@@ -15,6 +15,19 @@ const passwordConfirm = ref('')
 const loading = ref(false)
 const error = ref('')
 
+function formatPhone(e: Event) {
+  const input = e.target as HTMLInputElement
+  const raw = input.value.replace(/\D/g, '').slice(0, 11)
+  let formatted = raw
+  if (raw.length > 3 && raw.length <= 7) {
+    formatted = `${raw.slice(0, 3)}-${raw.slice(3)}`
+  } else if (raw.length > 7) {
+    formatted = `${raw.slice(0, 3)}-${raw.slice(3, 7)}-${raw.slice(7)}`
+  }
+  phone.value = formatted
+  input.value = formatted
+}
+
 async function handleSubmit() {
   error.value = ''
 
@@ -30,7 +43,7 @@ async function handleSubmit() {
   loading.value = true
   try {
     await authStore.signup(email.value, password.value, name.value, phone.value)
-    router.push('/')
+    router.push('/concerts')
   } catch {
     error.value = '회원가입에 실패했습니다. 다시 시도해주세요.'
   } finally {
@@ -110,10 +123,12 @@ async function handleSubmit() {
               <Phone class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground lg:text-gray-400" />
               <input
                 id="phone"
-                v-model="phone"
+                :value="phone"
                 type="tel"
                 required
+                maxlength="13"
                 placeholder="010-0000-0000"
+                @input="formatPhone"
                 class="w-full h-11 pl-10 pr-4 rounded-lg border border-input lg:border-gray-300 bg-background lg:bg-white text-foreground lg:text-gray-900 text-sm placeholder:text-muted-foreground lg:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-ring lg:focus:ring-primary focus:border-transparent"
               />
             </div>
