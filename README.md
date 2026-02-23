@@ -173,4 +173,4 @@ pnpm dev
 브라우저에서 **http://localhost:5173** 접속
 
 ---
-> #### &copy; 2025 FairTicket | Fair Ticketing Platform for Everyone | All Rights Reserved
+> #### &copy; 2026 FairTicket | Fair Ticketing Platform for Everyone | All Rights Reserved
